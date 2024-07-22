@@ -1,9 +1,9 @@
-// Import the express application and database configuration
-const app = require("./app");
-const db = require("./config/db");
+// Import the express application and database configuration using ES module syntax
+import app from "./app.js";
+import db from "./config/db.js";
 
 // Set the server port with a default of 8080 if not specified in environment variables
-const port = 8080 || process.env.PORT;
+const port = process.env.PORT || 8080;
 
 // Define a route for the root URL
 app.get("/", (req, res) => {

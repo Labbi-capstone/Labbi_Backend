@@ -1,5 +1,5 @@
-const User = require("../models/userModel");
-const jwt = require("jsonwebtoken");
+import User from "../models/userModel.js";
+import jwt from "jsonwebtoken";
 
 class UserService {
   // Registers a new user if email doesn't already exist
@@ -34,4 +34,4 @@ class UserService {
   }
 }
 
-module.exports = UserService;
+export default UserService;

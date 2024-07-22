@@ -1,8 +1,8 @@
 // Importing the UserService to use its functionalities for user operations
-const UserService = require("../services/userServices");
+import UserService from "../services/userServices.js";
 
 // Controller function for handling user registration
-exports.register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   try {
     // Extract user details from request body
     const { fullname, email, password } = req.body;
@@ -17,7 +17,7 @@ exports.register = async (req, res, next) => {
 };
 
 // Controller function for handling user login
-exports.login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     // Extract login credentials from request body
     const { email, password } = req.body;
@@ -31,7 +31,6 @@ exports.login = async (req, res, next) => {
     if (!isMatch) {
       throw new Error("Wrong password");
     }
-
     // Prepare token data
     let tokenData = { _id: user._id, email: user.email };
     // Generate authentication token

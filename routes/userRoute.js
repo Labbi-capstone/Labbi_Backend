@@ -1,7 +1,7 @@
-// Import necessary modules and controllers
-const express = require("express");
-const User = require("../models/userModel");
-const UserController = require("../controllers/userController");
+// Import necessary modules and controllers using ESM syntax
+import express from "express";
+import User from "../models/userModel.js";
+import * as UserController from "../controllers/userController.js";
 
 // Initialize express router
 const router = express.Router();
@@ -12,4 +12,4 @@ router.post("/register", UserController.register);
 router.post("/login", UserController.login);
 
 // Export the router for use in the main app
-module.exports = router;
+export default router;

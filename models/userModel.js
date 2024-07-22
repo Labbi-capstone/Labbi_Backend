@@ -1,7 +1,7 @@
-const Schema = mongoose.Schema;
+import mongoose from "mongoose";
 
 // Define the schema for the user model
-const userSchema = new Schema({
+const userSchema = new mongoose.Schema({
   fullName: {
     type: String,
     required: true, // Full name is required
@@ -21,14 +21,14 @@ const userSchema = new Schema({
   },
   role: {
     type: String,
-    required: true, // Role is required
+    required: false, // Role is required
     enum: ["user", "developer", "admin", "adminOrg"], // Enum to restrict role to specific values
     default: "user", // Default role if not specified
   },
   dashboardUids: [
     {
       type: String,
-      required: true, // Each dashboard UID is required
+      required: false, // Each dashboard UID is required
     },
   ],
 });
@@ -45,7 +45,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 // Define a schema for AdminOrg which extends userSchema with an additional field for organizations
-const AdminOrgSchema = new Schema({
+const AdminOrgSchema = new mongoose.Schema({
   ...userSchema.obj, // Spread operator to inherit properties from userSchema
   orgs: [String], // List of organizations the adminOrg owns
 });
@@ -55,4 +55,7 @@ const User = mongoose.model("User", userSchema);
 const AdminOrg = mongoose.model("AdminOrg", AdminOrgSchema);
 
 // Export the models
-module.exports = { User, AdminOrg };
+export default { User, AdminOrg };
+
+
+
