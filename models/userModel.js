@@ -1,44 +1,58 @@
-const mongoose = require('mongoose')
-const db = require('../config/db')
-const bcrypt = require('bcrypt')
+const Schema = mongoose.Schema;
 
-const Schema = mongoose.Schema
-
+// Define the schema for the user model
 const userSchema = new Schema({
-    fullname: {
-        type: String,
-        required: true,
+  fullName: {
+    type: String,
+    required: true, // Full name is required
+  },
+  email: {
+    type: String,
+    required: true, // Email is required
+    unique: true, // Email must be unique across users
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, // Regex to validate email format
+      "Please fill a valid email address", // Custom error message for invalid emails
+    ],
+  },
+  password: {
+    type: String,
+    required: true, // Password is required
+  },
+  role: {
+    type: String,
+    required: true, // Role is required
+    enum: ["user", "developer", "admin", "adminOrg"], // Enum to restrict role to specific values
+    default: "user", // Default role if not specified
+  },
+  dashboardUids: [
+    {
+      type: String,
+      required: true, // Each dashboard UID is required
     },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    password: {
-        type: String,
-        required: true,
-    }
+  ],
 });
 
-userSchema.pre('save', async function(){
-    try {
-        var user = this;
-        const salt = await(bcrypt.genSalt(10));
-        const hashPass = await bcrypt.hash(user.password,salt)
+// Pre-save hook to hash the password before saving the user document
+userSchema.pre("save", async function () {
+  const salt = await bcrypt.genSalt(10); // Generate a salt
+  this.password = await bcrypt.hash(this.password, salt); // Hash the password with the salt
+});
 
-        user.password = hashPass
-    } catch (error) {
-        throw error
-    }
-})
+// Method to compare a candidate password with the user's password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password); // Returns true if passwords match
+};
 
-userSchema.methods.comparePassword = async function(password){
-    try {
-        const isMatch = await bcrypt.compare(password, this.password);
-        return isMatch;
-    } catch (error) {
-        throw error
-    }
-}
+// Define a schema for AdminOrg which extends userSchema with an additional field for organizations
+const AdminOrgSchema = new Schema({
+  ...userSchema.obj, // Spread operator to inherit properties from userSchema
+  orgs: [String], // List of organizations the adminOrg owns
+});
 
-module.exports = mongoose.model("User", userSchema);
+// Create models from the schemas
+const User = mongoose.model("User", userSchema);
+const AdminOrg = mongoose.model("AdminOrg", AdminOrgSchema);
+
+// Export the models
+module.exports = { User, AdminOrg };

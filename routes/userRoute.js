@@ -1,10 +1,15 @@
-const express = require('express')
-const User = require('../models/userModel')
-const UserController = require("../controllers/userController")
+// Import necessary modules and controllers
+const express = require("express");
+const User = require("../models/userModel");
+const UserController = require("../controllers/userController");
 
-const router = express.Router()
+// Initialize express router
+const router = express.Router();
 
-router.post('/signup', UserController.register)
-router.post('/signin', UserController.login)
+// Route for user registration
+router.post("/register", UserController.register);
+// Route for user login
+router.post("/login", UserController.login);
 
-module.exports = router
+// Export the router for use in the main app
+module.exports = router;
