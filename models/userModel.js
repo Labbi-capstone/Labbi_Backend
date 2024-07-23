@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt"; // Import bcrypt module
 
 // Define the schema for the user model
 const userSchema = new mongoose.Schema({
@@ -56,7 +57,3 @@ const AdminOrg = mongoose.model("AdminOrg", AdminOrgSchema);
 
 // Export the models
 export { User, AdminOrg };
-
-
-
-
