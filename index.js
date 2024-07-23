@@ -1,10 +1,13 @@
 // Import the express application and database configuration using ES module syntax
 import app from "./app.js";
-import db from "./config/db.js";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js";
+dotenv.config();
 
-// Set the server port with a default of 8080 if not specified in environment variables
+// Set the server port with a default of 3000 if not specified in environment variables
 const port = process.env.PORT || 3000;
-
+// Connect to database
+connectDB();
 // Define a route for the root URL
 app.get("/", (req, res) => {
   // Response handling for root route can be implemented here
