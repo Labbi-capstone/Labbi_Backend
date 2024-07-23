@@ -5,9 +5,9 @@ import UserService from "../services/userServices.js";
 export const register = async (req, res, next) => {
   try {
     // Extract user details from request body
-    const { fullname, email, password } = req.body;
+    const { fullName, email, password } = req.body;
     // Register the user using UserService
-    await UserService.register(fullname, email, password);
+    await UserService.register(fullName, email, password);
     // Respond with success message if registration is successful
     res.json({ status: true, success: "Registered successfully" });
   } catch (error) {

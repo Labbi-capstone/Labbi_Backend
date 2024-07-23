@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 class UserService {
   // Registers a new user if email doesn't already exist
-  static async register(fullname, email, password) {
+  static async register(fullName, email, password) {
     try {
       // Check for existing user by email
       const existingUser = await User.findOne({ email: email });
@@ -12,7 +12,7 @@ class UserService {
       }
 
       // Create and save new user
-      const newUser = new User({ fullname, email, password });
+      const newUser = new User({ fullName, email, password });
       return await newUser.save();
     } catch (error) {
       throw error;
