@@ -3,7 +3,7 @@ import app from "./app.js";
 import db from "./config/db.js";
 
 // Set the server port with a default of 8080 if not specified in environment variables
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 
 // Define a route for the root URL
 app.get("/", (req, res) => {
