@@ -1,6 +1,6 @@
 // Import necessary modules and controllers using ESM syntax
 import express from "express";
-import User from "../models/userModel.js";
+import { User } from "../models/userModel.js";
 import * as UserController from "../controllers/userController.js";
 
 // Initialize express router

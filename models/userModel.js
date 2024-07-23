@@ -55,7 +55,8 @@ const User = mongoose.model("User", userSchema);
 const AdminOrg = mongoose.model("AdminOrg", AdminOrgSchema);
 
 // Export the models
-export default { User, AdminOrg };
+export { User, AdminOrg };
+
 
 
 
