@@ -1,11 +1,16 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const app = express()
+// Import necessary modules for the application
+import express from "express";
+import bodyParser from "body-parser";
+import userRouter from "./routes/userRoute.js";
 
-const userRouter = require("./routes/userRoute")
+// Initialize express application
+const app = express();
 
-app.use(bodyParser.json())
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
 
-app.use('/',userRouter);
+// Use userRouter for handling root path requests
+app.use("/", userRouter);
 
-module.exports = app;
+// Export the express app for use in other files
+export default app;
