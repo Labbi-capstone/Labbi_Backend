@@ -43,3 +43,38 @@ export const login = async (req, res, next) => {
     res.json({ status: false, message: error.message });
   }
 };
+
+// TODO: Ends the user's session.
+async function logout(req, res) {
+    // Logic to log out a user
+}
+
+// TODO: Retrieves the profile information of the currently logged-in user.
+async function getProfile(req, res) {
+    // Logic to get user's profile information
+}
+
+// TODO: Updates user information.
+async function updateUser(req, res) {
+    // Logic to update user information
+}
+
+// TODO: Deletes a user account.
+async function deleteUser(req, res) {
+    // Logic to delete a user
+}
+
+// TODO: Lists all users (admin functionality or for social features).
+async function listUsers(req, res) {
+    // Logic to list all users
+}
+
+// TODO: Allows a user to change their password.
+async function changePassword(req, res) {
+    // Logic for changing password
+}
+
+async function resetPassword(req, res) {
+    // Logic for resetting the password
+}
+

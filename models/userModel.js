@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt"; // Import bcrypt module
+import { v4 as uuidv4 } from "uuid";
 
 // Define the schema for the user model
 const userSchema = new mongoose.Schema({
+
   fullName: {
     type: String,
     required: true, // Full name is required
