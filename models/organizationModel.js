@@ -7,7 +7,7 @@ const organizationSchema = new Schema({
     type: String,
     required: true,
   },
-  orgAdmin: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  orgAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   members: [{ type: Schema.Types.ObjectId, ref: "User" }],
   dashboardIds: [{ type: Schema.Types.ObjectId, ref: "Dashboard" }],
 });
