@@ -10,6 +10,17 @@ const router = express.Router();
 router.post("/register", UserController.register);
 // Route for user login
 router.post("/login", UserController.login);
-
+// Route for user logout
+router.get("/logout", UserController.logout);
+// Route for refreshing token
+router.get("/refresh-token", UserController.refreshToken);
+// Route for getting profile
+router.get("/profile/:id", UserController.getProfile);
+// Route for getting profile
+router.delete("/delete/:id", UserController.deleteUser);
+// Route for editing profile
+router.put("/update/:id", UserController.updateUser);
+// Route for listing users
+router.get("/", UserController.listUsers);
 // Export the router for use in the main app
 export default router;

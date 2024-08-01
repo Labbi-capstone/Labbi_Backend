@@ -32,6 +32,14 @@ class UserService {
   static async generateToken(tokenData, secretKey, jwtExpire) {
     return jwt.sign(tokenData, secretKey, { expiresIn: jwtExpire });
   }
+
+  static async createAccessToken(user) {
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
+  };
+  
+  static async createRefreshToken(user) {
+    return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
+  };
 }
 
 export default UserService;
