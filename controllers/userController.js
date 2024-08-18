@@ -1,5 +1,6 @@
 // Importing the UserService to use its functionalities for user operations
 import UserService from "../services/userServices.js";
+import { User } from "../models/userModel.js";
 
 // Controller function for handling user registration
 export const register = async (req, res, next) => {
@@ -26,21 +27,28 @@ export const login = async (req, res, next) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new Error("Wrong password");
 
+    // Generate access and refresh tokens
     const accesstoken = await UserService.createAccessToken({ id: user._id });
+    console.log("Generated Access Token:", accesstoken);
     const refreshtoken = await UserService.createRefreshToken({ id: user._id });
 
+    // Set the refresh token as an HTTP-only cookie
     res.cookie("refreshtoken", refreshtoken, {
       httpOnly: true,
       path: "/users/refresh-token",
       secure: true,
     });
 
-    // Include the user role in the response
+    // Send the response including the user role
     res.status(200).json({
       status: true,
       token: accesstoken,
       user: {
-        role: user.role, // Include the role in the response
+        role: user.role,
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        dashboardUids: user.dashboardUids,
       },
     });
   } catch (error) {
@@ -48,38 +56,98 @@ export const login = async (req, res, next) => {
   }
 };
 
-
 // TODO: Ends the user's session.
-async function logout(req, res) {
-    // Logic to log out a user
-}
+export const logout = async (req, res) => {
+  // Logic to log out a user
+  try {
+    res.clearCookie("refreshtoken", { path: "/users/refresh-token" });
+    return res.json({ msg: "Logged out" });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};
 
 // TODO: Retrieves the profile information of the currently logged-in user.
-async function getProfile(req, res) {
-    // Logic to get user's profile information
-}
+export const getProfile = async (req, res) => {
+  // Logic to get user's profile information
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(400).json({ msg: "User does not exist!" });
+
+    res.json(user);
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};
 
 // TODO: Updates user information.
-async function updateUser(req, res) {
-    // Logic to update user information
-}
+export const updateUser = async (req, res) => {
+  // Logic to update user information
+  try {
+    const { fullName, email } = req.body;
+
+    await User.findByIdAndUpdate(
+      { _id: req.params.id },
+      {
+        fullName,
+        email,
+      }
+    );
+
+    res.json({ msg: "Updated user" });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};
 
 // TODO: Deletes a user account.
-async function deleteUser(req, res) {
-    // Logic to delete a user
-}
+export const deleteUser = async (req, res) => {
+  // Logic to delete a user
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ msg: "User deleted" });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};
 
 // TODO: Lists all users (admin functionality or for social features).
-async function listUsers(req, res) {
-    // Logic to list all users
-}
+export const listUsers = async (req, res) => {
+  // Logic to list all users
+  try {
+    const users = await User.find();
+    res.status(200).json({ users });
+  } catch (error) {
+    // Respond with error message if login fails
+    res.json({ status: false, message: error.message });
+  }
+};
 
 // TODO: Allows a user to change their password.
 async function changePassword(req, res) {
-    // Logic for changing password
+  // Logic for changing password
 }
 
 async function resetPassword(req, res) {
-    // Logic for resetting the password
+  // Logic for resetting the password
 }
 
+// TODO: refresh token
+export const refreshToken = async (req, res) => {
+  try {
+    const rf_token = req.cookies.refreshtoken;
+    console.log(rf_token);
+    if (!rf_token)
+      return res.status(400).json({ msg: "Please login or Register" });
+
+    jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) return res.status(400).json({ msg: err });
+      const accesstoken = createAccessToken({ id: user.id });
+      res.json({ user, accesstoken });
+    });
+
+    res.json({ rf_token });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};

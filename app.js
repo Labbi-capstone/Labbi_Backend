@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser"
 import userRouter from "./routes/userRoute.js";
 import organizationRouter from "./routes/organizationRoute.js";
 
@@ -14,6 +15,7 @@ app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
+app.use(cookieParser())
 
 // Use userRouter for handling root path requests
 app.use("/api/users", userRouter);
