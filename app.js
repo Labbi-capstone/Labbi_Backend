@@ -1,5 +1,6 @@
 // Import necessary modules for the application
 import express from "express";
+import cors from "cors";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
 import userRouter from "./routes/userRoute.js";
@@ -7,6 +8,10 @@ import organizationRouter from "./routes/organizationRoute.js";
 
 // Initialize express application
 const app = express();
+app.use(cors()); // This enables CORS for all origins
+
+// More specific setup:
+app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
