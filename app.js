@@ -10,11 +10,7 @@ const app = express();
 app.use(cors()); // This enables CORS for all origins
 
 // More specific setup:
-app.use(
-  cors({
-    origin: "http://localhost:3000", // Adjust the origin if needed
-  })
-);
+app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());

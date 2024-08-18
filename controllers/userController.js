@@ -19,30 +19,35 @@ export const register = async (req, res, next) => {
 // Controller function for handling user login
 export const login = async (req, res, next) => {
   try {
-    // Extract login credentials from request body
     const { email, password } = req.body;
-    // Verify user existence
     const user = await UserService.checkUser(email);
-    if (!user) {
-      throw new Error("User does not exist");
-    }
-    // Verify password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      throw new Error("Wrong password");
-    }
-    // Prepare token data
-    let tokenData = { _id: user._id, email: user.email };
-    // Generate authentication token
-    const token = await UserService.generateToken(tokenData, "secretKey", "1h");
+    if (!user) throw new Error("User does not exist");
 
-    // Respond with token if login is successful
-    res.status(200).json({ status: true, token: token });
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) throw new Error("Wrong password");
+
+    const accesstoken = await UserService.createAccessToken({ id: user._id });
+    const refreshtoken = await UserService.createRefreshToken({ id: user._id });
+
+    res.cookie("refreshtoken", refreshtoken, {
+      httpOnly: true,
+      path: "/users/refresh-token",
+      secure: true,
+    });
+
+    // Include the user role in the response
+    res.status(200).json({
+      status: true,
+      token: accesstoken,
+      user: {
+        role: user.role, // Include the role in the response
+      },
+    });
   } catch (error) {
-    // Respond with error message if login fails
     res.json({ status: false, message: error.message });
   }
 };
+
 
 // TODO: Ends the user's session.
 async function logout(req, res) {
