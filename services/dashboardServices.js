@@ -1,3 +1,5 @@
+import Dashboard from "../models/dashboardModel.js";
+
 class DashboardService {
   static async createDashboard(data) {
     const dashboard = new Dashboard(data);

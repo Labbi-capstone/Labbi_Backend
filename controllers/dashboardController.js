@@ -9,10 +9,12 @@ export const createDashboard = async (req, res) => {
         .json({ message: "Access denied. Only admins can create dashboards." });
     }
 
+    // Make sure that `created_by` is passed correctly
     const dashboard = await DashboardService.createDashboard({
       ...req.body,
-      created_by: req.user._id,
+      created_by: req.user.id, // This line ensures `created_by` is set
     });
+
     res.status(201).json(dashboard);
   } catch (error) {
     res.status(500).json({ message: error.message });

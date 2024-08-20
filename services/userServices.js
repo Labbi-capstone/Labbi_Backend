@@ -33,13 +33,23 @@ class UserService {
     return jwt.sign(tokenData, secretKey, { expiresIn: jwtExpire });
   }
 
+  // Create Access Token with ID and Role
   static async createAccessToken(user) {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
-  };
-  
+    return jwt.sign(
+      { id: user.id, role: user.role }, // Include role in the token payload
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "1d" }
+    );
+  }
+
+  // Create Refresh Token with ID and Role
   static async createRefreshToken(user) {
-    return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
-  };
+    return jwt.sign(
+      { id: user.id, role: user.role }, // Include role in the token payload
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
+  }
 }
 
 export default UserService;
