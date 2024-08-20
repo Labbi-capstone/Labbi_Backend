@@ -28,12 +28,12 @@ export const login = async (req, res, next) => {
     if (!isMatch) throw new Error("Wrong password");
 
     // Generate access and refresh tokens
-    const accesstoken = await UserService.createAccessToken({ id: user._id });
-    console.log("Generated Access Token:", accesstoken);
-    const refreshtoken = await UserService.createRefreshToken({ id: user._id });
+    const accessToken = await UserService.createAccessToken({ id: user._id });
+    console.log("Generated Access Token:", accessToken);
+    const refreshToken = await UserService.createRefreshToken({ id: user._id });
 
     // Set the refresh token as an HTTP-only cookie
-    res.cookie("refreshtoken", refreshtoken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       path: "/users/refresh-token",
       secure: true,
@@ -42,7 +42,7 @@ export const login = async (req, res, next) => {
     // Send the response including the user role
     res.status(200).json({
       status: true,
-      token: accesstoken,
+      token: accessToken,
       user: {
         role: user.role,
         id: user._id,
@@ -81,20 +81,23 @@ export const getProfile = async (req, res) => {
 };
 
 // TODO: Updates user information.
+// Updates user information, including name, email, and password.
 export const updateUser = async (req, res) => {
-  // Logic to update user information
   try {
-    const { fullName, email } = req.body;
+    const { fullName, email, password } = req.body;
+    const updateData = {};
 
-    await User.findByIdAndUpdate(
-      { _id: req.params.id },
-      {
-        fullName,
-        email,
-      }
-    );
+    if (fullName) updateData.fullName = fullName;
+    if (email) updateData.email = email;
+    if (password) {
+      // Hash the new password before saving
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
 
-    res.json({ msg: "Updated user" });
+    await User.findByIdAndUpdate({ _id: req.params.id }, updateData);
+
+    res.json({ msg: "User updated successfully" });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
