@@ -26,11 +26,17 @@ export const login = async (req, res, next) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new Error("Wrong password");
-
-    // Generate access and refresh tokens
-    const accessToken = await UserService.createAccessToken({ id: user._id });
+    
+    // Generate access and refresh tokens with the role included in the payload
+    const accessToken = await UserService.createAccessToken({
+      id: user._id,
+      role: user.role, // Include the role here
+    });
     console.log("Generated Access Token:", accessToken);
-    const refreshToken = await UserService.createRefreshToken({ id: user._id });
+    const refreshToken = await UserService.createRefreshToken({
+      id: user._id,
+      role: user.role, // Include the role here as well
+    });
 
     // Set the refresh token as an HTTP-only cookie
     res.cookie("refreshToken", refreshToken, {
