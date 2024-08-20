@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
 import userRouter from "./routes/userRoute.js";
 import organizationRouter from "./routes/organizationRoute.js";
+import dashboardRoute from "./routes/dashboardRoute.js";
 
 // Initialize express application
 const app = express();
@@ -22,6 +23,7 @@ app.use("/api/users", userRouter);
 
 app.use('/api/organizations', organizationRouter);
 
+app.use("/api/dashboard", dashboardRoute);
 
 // Export the express app for use in other files
 export default app;
