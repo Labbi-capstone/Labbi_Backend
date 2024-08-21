@@ -19,42 +19,34 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
-  // Simulated response to be sent immediately when the client connects
-  const simulatedResponse = {
-    status: "success",
-    data: {
-      resultType: "vector",
-      result: [
+  // Function to fetch Prometheus data
+  const fetchPrometheusData = async () => {
+    try {
+      const response = await axios.get(
+        "http://14.224.155.240:10000/prometheus/api/v1/query?query=go_gc_duration_seconds",
         {
-          metric: {
-            __name__: "go_gc_duration_seconds",
-            instance: "localhost:9090",
-            job: "prometheus",
-            quantile: "0",
+          headers: {
+            Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
           },
-          value: [Date.now(), "0.000094904"],
-        },
-        {
-          metric: {
-            __name__: "go_gc_duration_seconds",
-            instance: "localhost:9090",
-            job: "prometheus",
-            quantile: "0.25",
-          },
-          value: [Date.now(), "0.000108405"],
-        },
-        // Additional data...
-      ],
-    },
+        }
+      );
+
+      if (response.data) {
+        ws.send(JSON.stringify(response.data));
+      }
+    } catch (error) {
+      console.error("Error fetching Prometheus data:", error.message);
+    }
   };
 
-  ws.send(JSON.stringify(simulatedResponse)); // Send data immediately upon connection
+  // Fetch data every second
+  const intervalId = setInterval(fetchPrometheusData, 1000);
 
   ws.on("close", () => {
     console.log("Client disconnected");
+    clearInterval(intervalId); // Stop fetching data when the client disconnects
   });
 });
-
 
 // Define a route for the root URL
 app.get("/", (req, res) => {
