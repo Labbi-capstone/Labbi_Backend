@@ -2,12 +2,13 @@
   "name": "labbi-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index",
-    "run": "node index.js"
+    "dev": "nodemon server",
+    "run": "node server.js",
+    "seed": "node seeds/seedEndpoints.js"
   },
   "keywords": [],
   "author": "",

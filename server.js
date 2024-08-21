@@ -4,12 +4,19 @@ import { WebSocketServer } from "ws";
 import dotenv from "dotenv";
 import axios from "axios";
 import app from "./app.js"; // Import your Express app
+import connectDB from "./config/db.js";
 
 dotenv.config();
 
 // Set the server port with a default of 3000 if not specified in environment variables
 const port = process.env.PORT || 3000;
 
+// Connect to database
+connectDB();
+
+app.get("/", (req, res) => {
+  // Response handling for root route can be implemented here
+});
 // Create the HTTP server using the Express app
 const server = http.createServer(app);
 
@@ -40,7 +47,7 @@ wss.on("connection", (ws) => {
   };
 
   // Fetch data every second
-  const intervalId = setInterval(fetchPrometheusData, 1000);
+  const intervalId = setInterval(fetchPrometheusData, 2000);
 
   ws.on("close", () => {
     console.log("Client disconnected");
