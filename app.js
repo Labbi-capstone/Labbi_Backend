@@ -2,28 +2,28 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import cookieParser from "cookie-parser"
+import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoute.js";
 import organizationRouter from "./routes/organizationRoute.js";
 import dashboardRoute from "./routes/dashboardRoute.js";
 
 // Initialize express application
 const app = express();
-app.use(cors()); // This enables CORS for all origins
 
-// More specific setup:
+// Middleware to enable CORS and parse JSON bodies
 app.use(cors());
-
-// Middleware to parse JSON bodies
 app.use(bodyParser.json());
-app.use(cookieParser())
+app.use(cookieParser());
 
-// Use userRouter for handling root path requests
+// Register routes for the application
 app.use("/api/users", userRouter);
+app.use("/api/organizations", organizationRouter);
+app.use("/api/dashboards", dashboardRoute);
 
-app.use('/api/organizations', organizationRouter);
-
-app.use("/api/dashboard", dashboardRoute);
+// Root route for health check or basic info
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 
 // Export the express app for use in other files
 export default app;
