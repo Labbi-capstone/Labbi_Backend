@@ -25,6 +25,12 @@ const dashboardSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  chart_ids: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chart",
+    },
+  ],
   created_at: {
     type: Date,
     default: Date.now,
