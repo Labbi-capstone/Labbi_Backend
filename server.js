@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import axios from "axios";
 import app from "./app.js"; // Import your Express app
 import connectDB from "./config/db.js";
+import PrometheusEndpoint from "./models/prometheusEndpointModel.js";
 
 dotenv.config();
 
@@ -15,52 +16,85 @@ const port = process.env.PORT || 3000;
 connectDB();
 
 app.get("/", (req, res) => {
-  // Response handling for root route can be implemented here
+  res.send("API is running...");
 });
-// Create the HTTP server using the Express app
-const server = http.createServer(app);
 
-// WebSocket server
+const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
-  // Function to fetch Prometheus data
-  const fetchPrometheusData = async () => {
+  ws.on("message", async (message) => {
+    console.log("Received message from client:", message);
+
+    // Use the provided ID to fetch the Prometheus endpoint
+    const endpointId = "66c6479710635f4d63b6d08b";
+
+    // Logging to verify that the process is continuing
+    console.log(`Fetching endpoint with ID: ${endpointId}`);
+
+    let endpoint;
     try {
-      const response = await axios.get(
-        "http://14.224.155.240:10000/prometheus/api/v1/query?query=go_gc_duration_seconds",
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
-          },
-        }
+      // Log the database query attempt
+      console.log("Attempting to query the database for the endpoint...");
+      endpoint = await PrometheusEndpoint.findById(endpointId);
+      if (!endpoint) {
+        console.log("Endpoint not found in the database.");
+        ws.send(JSON.stringify({ error: "Endpoint not found" }));
+        return;
+      }
+      console.log(`Database query result: ${JSON.stringify(endpoint)}`);
+    } catch (dbError) {
+      console.error("Error querying the database:", dbError.message);
+      ws.send(
+        JSON.stringify({
+          error: "Failed to query the database",
+          details: dbError.message,
+        })
+      );
+      return;
+    }
+
+    const url = `${endpoint.baseUrl}${endpoint.path}${endpoint.query}`;
+    console.log(`Constructed URL: ${url}`);
+
+    try {
+      console.log("Sending request to Prometheus API...");
+      // Set a timeout for the axios request to avoid hanging
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+        },
+        timeout: 5000, // 5 seconds timeout
+      });
+      console.log(
+        "Received data from Prometheus API:",
+        JSON.stringify(response.data)
       );
 
-      if (response.data) {
-        ws.send(JSON.stringify(response.data));
-      }
+      // Send the response data to the WebSocket client
+      ws.send(JSON.stringify(response.data));
     } catch (error) {
-      console.error("Error fetching Prometheus data:", error.message);
+      if (error.code === "ECONNABORTED") {
+        console.error("Request timed out");
+      } else {
+        console.error("Error fetching Prometheus data:", error.message);
+      }
+      ws.send(
+        JSON.stringify({
+          error: "Failed to fetch Prometheus data",
+          details: error.message,
+        })
+      );
     }
-  };
-
-  // Fetch data every second
-  const intervalId = setInterval(fetchPrometheusData, 2000);
+  });
 
   ws.on("close", () => {
     console.log("Client disconnected");
-    clearInterval(intervalId); // Stop fetching data when the client disconnects
   });
 });
 
-// Define a route for the root URL
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
-
-// Start the server and listen on the specified port
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
