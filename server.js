@@ -3,9 +3,9 @@ import http from "http";
 import { WebSocketServer } from "ws";
 import dotenv from "dotenv";
 import axios from "axios";
-import app from "./app.js"; // Import your Express app
 import connectDB from "./config/db.js";
 import PrometheusEndpoint from "./models/prometheusEndpointModel.js";
+import app from "./app.js"; // Import your Express app
 
 dotenv.config();
 
@@ -15,11 +15,12 @@ const port = process.env.PORT || 3000;
 // Connect to database
 connectDB();
 
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
 
+
+// Create the HTTP server using the Express app
 const server = http.createServer(app);
+
+// WebSocket server
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
@@ -29,72 +30,68 @@ wss.on("connection", (ws) => {
     console.log("Received message from client:", message);
 
     // Use the provided ID to fetch the Prometheus endpoint
-    const endpointId = "66c6479710635f4d63b6d08b";
+    const endpointId = "66c65a1f48ce26e4b4cb8a01"; // Replace with the ID you want to test
 
-    // Logging to verify that the process is continuing
-    console.log(`Fetching endpoint with ID: ${endpointId}`);
-
-    let endpoint;
     try {
-      // Log the database query attempt
-      console.log("Attempting to query the database for the endpoint...");
-      endpoint = await PrometheusEndpoint.findById(endpointId);
+      console.log("Fetching Prometheus endpoint from the database...");
+      const endpoint = await PrometheusEndpoint.findById(endpointId);
+
       if (!endpoint) {
-        console.log("Endpoint not found in the database.");
+        console.log("Endpoint not found in the database");
         ws.send(JSON.stringify({ error: "Endpoint not found" }));
         return;
       }
-      console.log(`Database query result: ${JSON.stringify(endpoint)}`);
-    } catch (dbError) {
-      console.error("Error querying the database:", dbError.message);
-      ws.send(
-        JSON.stringify({
-          error: "Failed to query the database",
-          details: dbError.message,
-        })
-      );
-      return;
-    }
 
-    const url = `${endpoint.baseUrl}${endpoint.path}${endpoint.query}`;
-    console.log(`Constructed URL: ${url}`);
+      const url = `${endpoint.baseUrl}${endpoint.path}${endpoint.query}`;
+      console.log(`Constructed URL: ${url}`);
 
-    try {
-      console.log("Sending request to Prometheus API...");
-      // Set a timeout for the axios request to avoid hanging
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
-        },
-        timeout: 5000, // 5 seconds timeout
-      });
-      console.log(
-        "Received data from Prometheus API:",
-        JSON.stringify(response.data)
-      );
+      try {
+        console.log("Sending request to Prometheus API...");
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+          },
+        });
 
-      // Send the response data to the WebSocket client
-      ws.send(JSON.stringify(response.data));
-    } catch (error) {
-      if (error.code === "ECONNABORTED") {
-        console.error("Request timed out");
-      } else {
-        console.error("Error fetching Prometheus data:", error.message);
+        console.log(
+          "Received data from Prometheus API:",
+          JSON.stringify(response.data, null, 2)
+        );
+
+
+        // Send the response data to the WebSocket client
+        ws.send(JSON.stringify(response.data));
+      } catch (apiError) {
+        console.error("Failed to fetch Prometheus data:", apiError.message);
+        ws.send(
+          JSON.stringify({
+            error: "Failed to fetch Prometheus data",
+            details: apiError.message,
+          })
+        );
       }
+    } catch (dbError) {
+      console.error("Database error:", dbError.message);
       ws.send(
         JSON.stringify({
-          error: "Failed to fetch Prometheus data",
-          details: error.message,
+          error: "Failed to retrieve endpoint from the database",
+          details: dbError.message,
         })
       );
     }
   });
 
   ws.on("close", () => {
-    console.log("Client disconnected");
+    console.log("Client disconnected"); 
   });
 });
 
+// Define a route for the root URL
+app.get("/", (req, res) => { 
+  res.send("API is running...");
+});
+
+// Start the server and listen on the specified port
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
