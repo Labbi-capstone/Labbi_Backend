@@ -3,12 +3,7 @@ import mongoose from "mongoose";
 import {User} from "../models/userModel.js"; 
 
 // Middleware to check if the user is an admin
-export const isAdmin = (req, res, next) => {
-  if (req.headers.role !== "admin") {
-    return res.status(403).json({ message: "Access denied. Admins only." });
-  }
-  next();
-};
+
 
 // Controller to create an organization (only accessible by admin)
 export const createOrganization = async (req, res) => {
@@ -32,6 +27,40 @@ export const listOrganizations = async (req, res) => {
   }
 };
 
+export const listOrganizationUsers = async (req, res) => {
+  try {
+    const { orgId } = req.params;
+
+    // Fetch the organization by ID
+    const organization = await Organization.findById(orgId)
+      .populate("orgAdmins")
+      .populate("members");
+
+    if (!organization) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    // Prepare the response with users categorized by their roles
+    const orgAdmins = organization.orgAdmins.map((user) => ({
+      fullName: user.fullName,
+      email: user.email,
+      role: "orgAdmin",
+    }));
+
+    const members = organization.members.map((user) => ({
+      fullName: user.fullName,
+      email: user.email,
+      role: "member",
+    }));
+
+    const users = [...orgAdmins, ...members];
+
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("Error listing users:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Controller to add an orgAdmin (only accessible by admin)
 export const addOrgAdmin = async (req, res) => {
@@ -63,13 +92,13 @@ export const addOrgAdmin = async (req, res) => {
 };
 
 // Controller to add a user to an organization (only accessible by admin)
-export const addOrganizationUser = async (req, res) => {
+export const addOrgUser = async (req, res) => {
   try {
     const { orgId } = req.params;
-    const { user } = req.body;
+    const { members } = req.body; // Notice the change here from `user` to `members`
 
     // Validate the user
-    const userExists = await User.findById(user);
+    const userExists = await User.findById(members);
     if (!userExists) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -79,7 +108,11 @@ export const addOrganizationUser = async (req, res) => {
       return res.status(404).json({ message: "Organization not found." });
     }
 
-    org.members.push(user);
+    // Ensure the user is not already a member
+    if (!org.members.includes(members)) {
+      org.members.push(members);
+    }
+
     await org.save();
     res.status(200).json(org);
   } catch (error) {
