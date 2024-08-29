@@ -21,6 +21,17 @@ export const createOrganization = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const listOrganizations = async (req, res) => {
+  try {
+    console.log("Listing organizations...");
+    const organizations = await Organization.find();
+    res.status(200).json(organizations);
+  } catch (error) {
+    console.error("Error fetching organizations:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 // Controller to add an orgAdmin (only accessible by admin)
 export const addOrgAdmin = async (req, res) => {
