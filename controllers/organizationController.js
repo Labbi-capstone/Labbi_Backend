@@ -31,7 +31,7 @@ export const listOrganizationUsers = async (req, res) => {
   try {
     const { orgId } = req.params;
 
-    // Fetch the organization by ID
+    // Fetch the organization by ID and populate the orgAdmins and members arrays
     const organization = await Organization.findById(orgId)
       .populate("orgAdmins")
       .populate("members");
@@ -40,14 +40,16 @@ export const listOrganizationUsers = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    // Prepare the response with users categorized by their roles
+    // Prepare the response with users categorized by their roles and include the id
     const orgAdmins = organization.orgAdmins.map((user) => ({
+      id: user._id, // Add the user ID here
       fullName: user.fullName,
       email: user.email,
       role: "orgAdmin",
     }));
 
     const members = organization.members.map((user) => ({
+      id: user._id, // Add the user ID here
       fullName: user.fullName,
       email: user.email,
       role: "member",
@@ -61,6 +63,7 @@ export const listOrganizationUsers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Controller to add an orgAdmin (only accessible by admin)
 export const addOrgAdmin = async (req, res) => {
