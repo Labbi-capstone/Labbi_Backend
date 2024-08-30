@@ -50,6 +50,7 @@ wss.on("connection", (ws) => {
 
   // Function to fetch Prometheus data
   const fetchPrometheusData = async () => {
+    console.log("Attempting to fetch data from Prometheus...");
     if (!constructedUrl) {
       console.error("URL is not constructed, cannot fetch data.");
       return;
@@ -60,7 +61,7 @@ wss.on("connection", (ws) => {
           Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
         },
       });
-
+console.log("DATA:", response.data);
       if (response.data) {
         ws.send(JSON.stringify(response.data));
       }
