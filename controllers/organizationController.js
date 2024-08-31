@@ -64,6 +64,33 @@ export const listOrganizationUsers = async (req, res) => {
   }
 };
 
+// Fetch users not in a specific organization
+export const listUsersNotInOrg = async (req, res) => {
+  try {
+    const { orgId } = req.params;
+
+    // Fetch organization by ID
+    const organization = await Organization.findById(orgId).populate('members orgAdmins');
+
+    if (!organization) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    // Get IDs of all members (including orgAdmins) in the organization
+    const orgMemberIds = [...organization.members.map(member => member._id.toString()), 
+                          ...organization.orgAdmins.map(admin => admin._id.toString())];
+
+    // Fetch users not in the organization
+    const usersNotInOrg = await User.find({
+      _id: { $nin: orgMemberIds } // Exclude users who are in the organization
+    });
+
+    res.status(200).json(usersNotInOrg);
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Controller to add an orgAdmin (only accessible by admin)
 export const addOrgAdmin = async (req, res) => {
