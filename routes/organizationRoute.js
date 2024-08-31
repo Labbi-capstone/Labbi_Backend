@@ -5,7 +5,7 @@ import {
   listUsersNotInOrg,
   createOrganization,
   addOrgAdmin,
-  addOrgUser,
+  addOrgMember,
 } from "../controllers/organizationController.js";
 import { authenticateUser, isAdmin } from "../middlewares/authenticate.js";
 
@@ -29,6 +29,6 @@ router.post("/:orgId/addOrgAdmin", authenticateUser, isAdmin, addOrgAdmin);
 
 // Route to add a normal user to an organization (only accessible by admin)
 
-router.post("/:orgId/addOrgUser", authenticateUser, isAdmin, addOrgUser);
+router.post("/:orgId/addOrgMember", authenticateUser, isAdmin, addOrgMember);
 
 export default router;

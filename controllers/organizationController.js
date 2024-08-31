@@ -70,48 +70,62 @@ export const listUsersNotInOrg = async (req, res) => {
     const { orgId } = req.params;
 
     // Fetch organization by ID
-    const organization = await Organization.findById(orgId).populate('members orgAdmins');
+    const organization = await Organization.findById(orgId).populate(
+      "members orgAdmins"
+    );
 
     if (!organization) {
       return res.status(404).json({ message: "Organization not found" });
     }
 
     // Get IDs of all members (including orgAdmins) in the organization
-    const orgMemberIds = [...organization.members.map(member => member._id.toString()), 
-                          ...organization.orgAdmins.map(admin => admin._id.toString())];
+    const orgMemberIds = [
+      ...organization.members.map((member) => member._id),
+      ...organization.orgAdmins.map((admin) => admin._id),
+    ];
 
     // Fetch users not in the organization
     const usersNotInOrg = await User.find({
-      _id: { $nin: orgMemberIds } // Exclude users who are in the organization
+      _id: { $nin: orgMemberIds }, // Exclude users who are in the organization
     });
 
-    res.status(200).json(usersNotInOrg);
+    // Format the response to include id, fullName, email, and role
+    const users = usersNotInOrg.map((user) => ({
+      id: user._id, // Add the user ID here
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role, // Assuming 'role' field exists in your User schema
+    }));
+
+    res.status(200).json({ users });
   } catch (error) {
     console.error("Error fetching users:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
+
 // Controller to add an orgAdmin (only accessible by admin)
+// Controller to add multiple orgAdmins (only accessible by admin)
 export const addOrgAdmin = async (req, res) => {
   try {
     const { orgId } = req.params;
-    const { orgAdmins } = req.body;
-
-    // Validate the user
-    const user = await User.findById(orgAdmins);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    const { orgAdmins } = req.body; // Expecting an array of user IDs
 
     const org = await Organization.findById(orgId);
     if (!org) {
       return res.status(404).json({ message: "Organization not found." });
     }
 
-    // Add the user to orgAdmins array if not already present
-    if (!org.orgAdmins.includes(orgAdmins)) {
-      org.orgAdmins.push(orgAdmins);
+    // Validate each user and add them to orgAdmins array if not already present
+    for (const adminId of orgAdmins) {
+      const user = await User.findById(adminId);
+      if (!user) {
+        return res.status(404).json({ message: `User with ID ${adminId} not found.` });
+      }
+      if (!org.orgAdmins.includes(adminId)) {
+        org.orgAdmins.push(adminId);
+      }
     }
 
     await org.save();
@@ -121,26 +135,27 @@ export const addOrgAdmin = async (req, res) => {
   }
 };
 
-// Controller to add a user to an organization (only accessible by admin)
-export const addOrgUser = async (req, res) => {
+
+// Controller to add multiple users to an organization (only accessible by admin)
+export const addOrgMember = async (req, res) => {
   try {
     const { orgId } = req.params;
-    const { members } = req.body; // Notice the change here from `user` to `members`
-
-    // Validate the user
-    const userExists = await User.findById(members);
-    if (!userExists) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    const { members } = req.body; // Expecting an array of user IDs
 
     const org = await Organization.findById(orgId);
     if (!org) {
       return res.status(404).json({ message: "Organization not found." });
     }
 
-    // Ensure the user is not already a member
-    if (!org.members.includes(members)) {
-      org.members.push(members);
+    // Validate each user and add them to members array if not already present
+    for (const memberId of members) {
+      const user = await User.findById(memberId);
+      if (!user) {
+        return res.status(404).json({ message: `User with ID ${memberId} not found.` });
+      }
+      if (!org.members.includes(memberId)) {
+        org.members.push(memberId);
+      }
     }
 
     await org.save();
@@ -149,3 +164,4 @@ export const addOrgUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
