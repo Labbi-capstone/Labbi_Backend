@@ -2,6 +2,7 @@ import express from "express";
 import {
   listOrganizations,
   listOrganizationUsers,
+  listUsersNotInOrg,
   createOrganization,
   addOrgAdmin,
   addOrgUser,
@@ -16,6 +17,13 @@ router.post("/create", authenticateUser, isAdmin, createOrganization);
 router.get("/list", authenticateUser, isAdmin, listOrganizations);
 // Route to list all users in an organization (accessible by admin only)
 router.get("/:orgId/users", authenticateUser, isAdmin, listOrganizationUsers);
+
+router.get(
+  "/:orgId/users/not-in-org",
+  authenticateUser,
+  isAdmin,
+  listUsersNotInOrg
+);
 // Route to add an orgAdmin (only accessible by admin)
 router.post("/:orgId/addOrgAdmin", authenticateUser, isAdmin, addOrgAdmin);
 
