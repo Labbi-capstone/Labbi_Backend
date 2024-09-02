@@ -1,78 +1,83 @@
-import Organization from "../models/organizationModel.js";
 import mongoose from "mongoose";
-import {User} from "../models/userModel.js"; 
+import Organization from "../models/organizationModel.js";
+import { User } from "../models/userModel.js";
 
 // Middleware to check if the user is an admin
-
+// This would be implemented separately based on your authentication and authorization setup
 
 // Controller to create an organization (only accessible by admin)
 export const createOrganization = async (req, res) => {
   try {
-    const { name } = req.body;
-    const newOrg = new Organization({ name });
+    const { name, orgAdmins, members } = req.body;
+
+    const newOrg = new Organization({
+      name,
+      orgAdmins: orgAdmins || [], // Admins can be added during creation if needed
+      members: members || [], // Members can be added during creation if needed
+    });
+
     await newOrg.save();
     res.status(201).json(newOrg);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Controller to list all organizations
 export const listOrganizations = async (req, res) => {
   try {
-    console.log("Listing organizations...");
     const organizations = await Organization.find();
     res.status(200).json(organizations);
   } catch (error) {
-    console.error("Error fetching organizations:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
+// Controller to list users (admins and members) within an organization
 export const listOrganizationUsers = async (req, res) => {
   try {
     const { orgId } = req.params;
 
     // Fetch the organization by ID and populate the orgAdmins and members arrays
     const organization = await Organization.findById(orgId)
-      .populate("orgAdmins")
-      .populate("members");
+      .populate("orgAdmins", "fullName email role") // Populate with selected fields
+      .populate("members", "fullName email role");
 
     if (!organization) {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    // Prepare the response with users categorized by their roles and include the id
-    const orgAdmins = organization.orgAdmins.map((user) => ({
-      id: user._id, // Add the user ID here
-      fullName: user.fullName,
-      email: user.email,
-      role: "orgAdmin",
-    }));
-
-    const members = organization.members.map((user) => ({
-      id: user._id, // Add the user ID here
-      fullName: user.fullName,
-      email: user.email,
-      role: "member",
-    }));
-
-    const users = [...orgAdmins, ...members];
+    // Combine orgAdmins and members into a single response
+    const users = [
+      ...organization.orgAdmins.map((user) => ({
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: "orgAdmin",
+      })),
+      ...organization.members.map((user) => ({
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: "member",
+      })),
+    ];
 
     res.status(200).json({ users });
   } catch (error) {
-    console.error("Error listing users:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Fetch users not in a specific organization
+// Controller to list users not in a specific organization
 export const listUsersNotInOrg = async (req, res) => {
   try {
     const { orgId } = req.params;
 
-    // Fetch organization by ID
-    const organization = await Organization.findById(orgId).populate(
-      "members orgAdmins"
-    );
+    // Fetch organization by ID and populate members and orgAdmins
+    const organization = await Organization.findById(orgId)
+      .populate("members", "_id") // Populate only IDs for better performance
+      .populate("orgAdmins", "_id");
 
     if (!organization) {
       return res.status(404).json({ message: "Organization not found" });
@@ -89,24 +94,21 @@ export const listUsersNotInOrg = async (req, res) => {
       _id: { $nin: orgMemberIds }, // Exclude users who are in the organization
     });
 
-    // Format the response to include id, fullName, email, and role
+    // Format the response
     const users = usersNotInOrg.map((user) => ({
-      id: user._id, // Add the user ID here
+      id: user._id,
       fullName: user.fullName,
       email: user.email,
-      role: user.role, // Assuming 'role' field exists in your User schema
+      role: user.role,
     }));
 
     res.status(200).json({ users });
   } catch (error) {
-    console.error("Error fetching users:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
 
-
-// Controller to add an orgAdmin (only accessible by admin)
-// Controller to add multiple orgAdmins (only accessible by admin)
+// Controller to add orgAdmins (only accessible by admin)
 export const addOrgAdmin = async (req, res) => {
   try {
     const { orgId } = req.params;
@@ -121,7 +123,9 @@ export const addOrgAdmin = async (req, res) => {
     for (const adminId of orgAdmins) {
       const user = await User.findById(adminId);
       if (!user) {
-        return res.status(404).json({ message: `User with ID ${adminId} not found.` });
+        return res
+          .status(404)
+          .json({ message: `User with ID ${adminId} not found.` });
       }
       if (!org.orgAdmins.includes(adminId)) {
         org.orgAdmins.push(adminId);
@@ -135,8 +139,7 @@ export const addOrgAdmin = async (req, res) => {
   }
 };
 
-
-// Controller to add multiple users to an organization (only accessible by admin)
+// Controller to add members to an organization (only accessible by admin)
 export const addOrgMember = async (req, res) => {
   try {
     const { orgId } = req.params;
@@ -151,7 +154,9 @@ export const addOrgMember = async (req, res) => {
     for (const memberId of members) {
       const user = await User.findById(memberId);
       if (!user) {
-        return res.status(404).json({ message: `User with ID ${memberId} not found.` });
+        return res
+          .status(404)
+          .json({ message: `User with ID ${memberId} not found.` });
       }
       if (!org.members.includes(memberId)) {
         org.members.push(memberId);
@@ -164,4 +169,3 @@ export const addOrgMember = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

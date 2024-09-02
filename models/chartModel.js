@@ -5,13 +5,10 @@ const chartSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  query_url: {
-    type: String,
+  prometheus_endpoint_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "PrometheusEndpoint",
     required: true,
-  },
-  query_params: {
-    type: Map,
-    of: String,
   },
   chart_type: {
     type: String,
@@ -25,6 +22,11 @@ const chartSchema = new mongoose.Schema({
   created_by: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: false,
+  },
+  dashboard_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Dashboard",
     required: true,
   },
   created_at: {
@@ -38,3 +40,4 @@ const chartSchema = new mongoose.Schema({
 });
 
 export const Chart = mongoose.model("Chart", chartSchema);
+
