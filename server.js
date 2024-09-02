@@ -9,82 +9,91 @@ import app from "./app.js";
 
 dotenv.config();
 
-// Set the server port with a default of 3000 if not specified in environment variables
 const port = process.env.PORT || 3000;
-
-// Connect to database
 connectDB();
 
-// Fetch the Prometheus endpoint once at the start
-const endpointId = "66c65a1f48ce26e4b4cb8a01";
-let constructedUrl;
+const endpointIdForLineChart = "66c65a1f48ce26e4b4cb8a03";
+const endpointIdForBarChart = "66c65a1f48ce26e4b4cb8a01";
 
-const initialize = async () => {
+let constructedUrls = {};
+
+const initializeEndpoints = async () => {
   try {
-    const endpoint = await PrometheusEndpoint.findById(endpointId);
-    if (!endpoint) {
-      console.log("Endpoint not found in the database");
+    const lineChartEndpoint = await PrometheusEndpoint.findById(
+      endpointIdForLineChart
+    );
+    if (!lineChartEndpoint) {
+      console.log("Line Chart Endpoint not found in the database");
       return;
     }
-console.log("ENDPOINT", endpoint);
-    constructedUrl = `${endpoint.baseUrl}${endpoint.path}${endpoint.query}`;
-    console.log(`Constructed URL: ${constructedUrl}`);
+    constructedUrls.lineChartUrl = `${lineChartEndpoint.baseUrl}${lineChartEndpoint.path}${lineChartEndpoint.query}`;
+    console.log(`Line Chart URL: ${constructedUrls.lineChartUrl}`);
+
+    const barChartEndpoint = await PrometheusEndpoint.findById(
+      endpointIdForBarChart
+    );
+    if (!barChartEndpoint) {
+      console.log("Bar Chart Endpoint not found in the database");
+      return;
+    }
+    constructedUrls.barChartUrl = `${barChartEndpoint.baseUrl}${barChartEndpoint.path}${barChartEndpoint.query}`;
+    console.log(`Bar Chart URL: ${constructedUrls.barChartUrl}`);
   } catch (error) {
     console.error(
-      "Error fetching Prometheus endpoint from the database:",
+      "Error fetching Prometheus endpoints from the database:",
       error.message
     );
   }
 };
 
-initialize();
+initializeEndpoints();
 
-// Create the HTTP server using the Express app
 const server = http.createServer(app);
-
-// WebSocket server
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
-  // Function to fetch Prometheus data
-  const fetchPrometheusData = async () => {
-    console.log("Attempting to fetch data from Prometheus...");
-    if (!constructedUrl) {
-      console.error("URL is not constructed, cannot fetch data.");
-      return;
+const fetchPrometheusData = async (url, chartType) => {
+  console.log(`Attempting to fetch data for ${chartType} from Prometheus...`);
+  if (!url) {
+    console.error("URL is not constructed, cannot fetch data.");
+    return;
+  }
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+      },
+    });
+    console.log(`${chartType} DATA:`, JSON.stringify(response.data, null, 2)); // Print full response
+    if (response.data) {
+      ws.send(JSON.stringify({ chartType, data: response.data }));
     }
-    try {
-      const response = await axios.get(constructedUrl, {
-        headers: {
-          Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
-        },
-      });
-console.log("DATA:", response.data);
-      if (response.data) {
-        ws.send(JSON.stringify(response.data));
-      }
-    } catch (error) {
-      console.error("Error fetching Prometheus data:", error.message);
-    }
-  };
+  } catch (error) {
+    console.error(
+      `Error fetching ${chartType} data from Prometheus:`,
+      error.message
+    );
+  }
+};
 
-  // Fetch data every second
-  const intervalId = setInterval(fetchPrometheusData, 2000);
+
+  const intervalId = setInterval(() => {
+    fetchPrometheusData(constructedUrls.lineChartUrl, "lineChart");
+    fetchPrometheusData(constructedUrls.barChartUrl, "barChart");
+  }, 2000);
 
   ws.on("close", () => {
     console.log("Client disconnected");
-    clearInterval(intervalId); // Stop fetching data when the client disconnects
+    clearInterval(intervalId);
   });
 });
 
-// Define a route for the root URL
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Start the server and listen on the specified port
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

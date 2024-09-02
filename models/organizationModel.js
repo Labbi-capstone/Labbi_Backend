@@ -19,12 +19,6 @@ const organizationSchema = new Schema({
       ref: "User",
     },
   ],
-  dashboardIds: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Dashboard",
-    },
-  ],
 });
 
 const Organization = mongoose.model("Organization", organizationSchema);
