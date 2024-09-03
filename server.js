@@ -16,7 +16,8 @@ const port = process.env.PORT || 3000;
 connectDB();
 
 // Fetch the Prometheus endpoint once at the start
-const endpointId = "66c65a1f48ce26e4b4cb8a01";
+const endpointId = "66c65a1f48ce26e4b4cb8a03";
+// const endpointId2 = "66c65a1f48ce26e4b4cb8a01";
 let constructedUrl;
 
 const initialize = async () => {
