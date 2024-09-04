@@ -6,6 +6,8 @@ import userRouter from "./routes/userRoute.js";
 import organizationRouter from "./routes/organizationRoute.js";
 import dashboardRoute from "./routes/dashboardRoute.js";
 import chartRoute from "./routes/chartRoute.js"; // Import the new chart route
+import prometheusRoutes from "./routes/prometheusRoutes.js";
+
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+// Use the Prometheus routes
+app.use('/api/prometheus', prometheusRoutes);
 // Register routes for the application
 app.use("/api/users", userRouter);
 app.use("/api/organizations", organizationRouter);

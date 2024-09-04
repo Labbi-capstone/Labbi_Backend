@@ -1,43 +1,31 @@
 import express from "express";
-import axios from "axios";
-import PrometheusEndpoint from "../models/prometheusEndpoint.js";
+import {
+  createEndpoint,
+  getAllEndpoints,
+  getEndpointById,
+  updateEndpointById,
+  deleteEndpointById,
+  constructPrometheusUrl,
+} from "../controllers/prometheusController.js";
 
 const router = express.Router();
 
-router.get("/prometheus-query", async (req, res) => {
-  try {
-    const { query, endpointName } = req.query;
+// Route to create a new Prometheus endpoint
+router.post("/", createEndpoint);
 
-    if (!query || !endpointName) {
-      return res
-        .status(400)
-        .json({ message: "Query and endpointName parameters are required" });
-    }
+// Route to get all Prometheus endpoints
+router.get("/", getAllEndpoints);
 
-    // Fetch the endpoint configuration from the database
-    const endpoint = await PrometheusEndpoint.findOne({ name: endpointName });
+// Route to get a specific Prometheus endpoint by ID
+router.get("/:id", getEndpointById);
 
-    if (!endpoint) {
-      return res.status(404).json({ message: "Endpoint not found" });
-    }
+// Route to update a specific Prometheus endpoint by ID
+router.put("/:id", updateEndpointById);
 
-    // Build the full URL
-    const fullUrl = `${endpoint.baseUrl}${
-      endpoint.queryPath
-    }?query=${encodeURIComponent(query)}`;
+// Route to delete a specific Prometheus endpoint by ID
+router.delete("/:id", deleteEndpointById);
 
-    // Make the request to Prometheus
-    const response = await axios.get(fullUrl, {
-      headers: {
-        ...endpoint.headers.toObject(), // Spread headers stored in the DB (e.g., Authorization)
-      },
-    });
-
-    // Return the data to the frontend
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}); 
+// Route to construct the full URL for a Prometheus endpoint by ID
+router.get("/construct-url/:id", constructPrometheusUrl);
 
 export default router;

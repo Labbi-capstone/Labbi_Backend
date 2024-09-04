@@ -55,8 +55,7 @@ export const getChartById = async (req, res) => {
 export const getAllCharts = async (req, res) => {
   try {
     const charts = await Chart.find()
-      .populate("prometheus_endpoint_id")
-      .populate("dashboard_id");
+
     return res.status(200).json(charts);
   } catch (error) {
     return res.status(500).json({ error: error.message });
