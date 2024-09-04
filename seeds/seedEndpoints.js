@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import PrometheusEndpoint from "../models/PrometheusEndpointModel.js";
+import PrometheusEndpoint from "../models/prometheusEndpointModel.js";
 import connectDB from "../config/db.js";
 
 dotenv.config();

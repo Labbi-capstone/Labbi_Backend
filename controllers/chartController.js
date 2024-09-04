@@ -1,75 +1,153 @@
 import { Chart } from "../models/chartModel.js";
+import PrometheusEndpoint from "../models/prometheusEndpointModel.js";
+import Dashboard from "../models/dashboardModel.js";
 
-export const createChartAndAddToDashboard = async (req, res) => {
+export const createChart = async (req, res) => {
   try {
-    const { name, query_url, query_params, chart_type, dashboard_id } =
-      req.body;
-
-    // Create the new chart
-    const chart = new Chart({
+    const {
       name,
-      query_url,
-      query_params,
       chart_type,
-      created_by: req.user._id,
-    });
-    await chart.save();
+      prometheus_endpoint_id,
+      created_by,
+      dashboard_id,
+    } = req.body;
 
-    // Add the chart ID to the dashboard
-    await Dashboard.findByIdAndUpdate(dashboard_id, {
-      $push: { chart_ids: chart._id },
+    // Validate PrometheusEndpoint existence
+    const endpoint = await PrometheusEndpoint.findById(prometheus_endpoint_id);
+    if (!endpoint) {
+      return res.status(404).json({ error: "PrometheusEndpoint not found" });
+    }
+
+    // Create new chart
+    const newChart = new Chart({
+      name,
+      chart_type,
+      prometheus_endpoint_id,
+      created_by,
+      dashboard_id,
     });
 
-    res.status(201).json(chart);
+    await newChart.save();
+
+    return res.status(201).json(newChart);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
-
-export const getChartsByDashboard = async (req, res) => {
+export const getChartById = async (req, res) => {
   try {
-    const dashboard = await Dashboard.findById(
-      req.params.dashboard_id
-    ).populate("chart_ids");
-    if (!dashboard)
-      return res.status(404).json({ message: "Dashboard not found" });
+    const { id } = req.params;
+    const chart = await Chart.findById(id)
+      .populate("prometheus_endpoint_id")
+      .populate("dashboard_id");
 
-    res.status(200).json(dashboard.chart_ids);
+    if (!chart) {
+      return res.status(404).json({ error: "Chart not found" });
+    }
+
+    return res.status(200).json(chart);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const getAllCharts = async (req, res) => {
+  try {
+    const charts = await Chart.find()
+      .populate("prometheus_endpoint_id")
+      .populate("dashboard_id");
+    return res.status(200).json(charts);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
 
 export const updateChart = async (req, res) => {
   try {
-    const chart = await Chart.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
+    const { id } = req.params;
+    const { name, chart_type, prometheus_endpoint_id, is_active } = req.body;
+
+    // Validate PrometheusEndpoint existence if being updated
+    if (prometheus_endpoint_id) {
+      const endpoint = await PrometheusEndpoint.findById(
+        prometheus_endpoint_id
+      );
+      if (!endpoint) {
+        return res.status(404).json({ error: "PrometheusEndpoint not found" });
+      }
+    }
+
+    const updatedChart = await Chart.findByIdAndUpdate(
+      id,
+      {
+        name,
+        chart_type,
+        prometheus_endpoint_id,
+        is_active,
+        updated_at: Date.now(),
+      },
       { new: true }
     );
 
-    if (!chart) {
-      return res.status(404).json({ message: "Chart not found" });
+    if (!updatedChart) {
+      return res.status(404).json({ error: "Chart not found" });
     }
 
-    res.status(200).json(chart);
+    return res.status(200).json(updatedChart);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
-export const removeChartFromDashboard = async (req, res) => {
+export const deleteChart = async (req, res) => {
   try {
-    const { dashboard_id, chart_id } = req.body;
+    const { id } = req.params;
 
-    await Dashboard.findByIdAndUpdate(dashboard_id, {
-      $pull: { chart_ids: chart_id },
-    });
+    const deletedChart = await Chart.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Chart removed from dashboard" });
+    if (!deletedChart) {
+      return res.status(404).json({ error: "Chart not found" });
+    }
+
+    return res.status(200).json({ message: "Chart deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
+export const getChartsByDashboardId = async (req, res) => {
+  try {
+    const { dashboardId } = req.params;
+
+    const charts = await Chart.find({ dashboard_id: dashboardId })
+      .populate("prometheus_endpoint_id")
+      .populate("dashboard_id");
+
+    return res.status(200).json(charts);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const getChartsByOrganizationId = async (req, res) => {
+  try {
+    const { organizationId } = req.params;
+
+    // Fetch dashboards by organization ID
+    const dashboards = await Dashboard.find({
+      organization_id: organizationId,
+    });
+    const dashboardIds = dashboards.map((dashboard) => dashboard._id);
+
+    const charts = await Chart.find({
+      dashboard_id: { $in: dashboardIds },
+    })
+      .populate("prometheus_endpoint_id")
+      .populate("dashboard_id");
+
+    return res.status(200).json(charts);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};

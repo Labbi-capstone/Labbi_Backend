@@ -17,20 +17,10 @@ const dashboardSchema = new Schema({
     ref: "User",
     required: true,
   },
-  visibility: {
-    type: Boolean,
-    default: true,
-  },
   is_active: {
     type: Boolean,
     default: true,
   },
-  chart_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Chart",
-    },
-  ],
   created_at: {
     type: Date,
     default: Date.now,
