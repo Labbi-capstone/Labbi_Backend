@@ -34,8 +34,8 @@ export const getDashboards = async (req, res) => {
 // Retrieve dashboards based on orgID 
 export const getDashboardsByOrg = async (req, res) => {
   try {
-    const dashboards = await DashboardService.getDashboardsByOrg(req.orgId);
-    res.status(200).json(dashboards);
+    const dashboards = await DashboardService.getDashboardsByOrg(req.params.id);
+    res.status(200).json({dashboards});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

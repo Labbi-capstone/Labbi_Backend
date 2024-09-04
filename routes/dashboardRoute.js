@@ -14,6 +14,6 @@ router.post("/create", authenticateUser, createDashboard);
 router.get("/", authenticateUser, getDashboards);
 router.put("/:id", authenticateUser, updateDashboard);
 router.delete("/:id", authenticateUser, deleteDashboard);
-router.get("/:orgId", getDashboardsByOrg);
+router.get("/:id/dashboards", getDashboardsByOrg);
 
 export default router;
