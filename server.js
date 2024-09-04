@@ -18,6 +18,8 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
+  let interval = null; // Initialize interval variable
+
   ws.on("message", async (message) => {
     const { prometheusEndpointId, chartType } = JSON.parse(message);
     console.log(
@@ -42,19 +44,26 @@ wss.on("connection", (ws) => {
         });
         if (response.data) {
           ws.send(JSON.stringify({ chartType, data: response.data }));
+          console.log("Data sent to client");
         }
       } catch (error) {
         ws.send(
           JSON.stringify({ error: `Error fetching data: ${error.message}` })
+        
         );
       }
     };
 
+    // Clear existing interval before setting a new one to prevent duplicates
+    if (interval) {
+      clearInterval(interval);
+    }
+
     // Initial data fetch
     fetchPrometheusData();
 
-    // Set up a periodic fetch every 2 seconds
-    const interval = setInterval(fetchPrometheusData, 20000);
+    // Set up a periodic fetch every 10 seconds
+    interval = setInterval(fetchPrometheusData, 2000);
 
     ws.on("close", () => {
       console.log("Client disconnected");
