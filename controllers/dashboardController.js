@@ -31,6 +31,16 @@ export const getDashboards = async (req, res) => {
   }
 };
 
+// Retrieve dashboards based on orgID 
+export const getDashboardsByOrg = async (req, res) => {
+  try {
+    const dashboards = await DashboardService.getDashboardsByOrg(req.orgId);
+    res.status(200).json(dashboards);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Only Admins can update a dashboard
 export const updateDashboard = async (req, res) => {
   try {

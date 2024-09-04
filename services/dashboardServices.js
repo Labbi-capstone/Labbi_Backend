@@ -22,6 +22,10 @@ class DashboardService {
     }
   }
 
+  static async getDashboardsByOrg(orgId) {
+    return await Dashboard.find({ organization_id: orgId });
+  }
+
   static async updateDashboard(id, data) {
     return await Dashboard.findByIdAndUpdate(id, data, { new: true });
   }
