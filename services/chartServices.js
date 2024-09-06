@@ -27,8 +27,6 @@ export const createChart = async (chartData) => {
 // Get a chart by ID
 export const getChartById = async (id) => {
   const chart = await Chart.findById(id)
-    .populate("prometheus_endpoint_id")
-    .populate("dashboard_id");
 
   return chart;
 };
@@ -75,8 +73,6 @@ export const deleteChart = async (id) => {
 // Get charts by dashboard ID
 export const getChartsByDashboardId = async (dashboardId) => {
   const charts = await Chart.find({ dashboard_id: dashboardId })
-    .populate("prometheus_endpoint_id")
-    .populate("dashboard_id");
 
   return charts;
 };
@@ -89,8 +85,6 @@ export const getChartsByOrganizationId = async (organizationId) => {
   const charts = await Chart.find({
     dashboard_id: { $in: dashboardIds },
   })
-    .populate("prometheus_endpoint_id")
-    .populate("dashboard_id");
 
   return charts;
 };

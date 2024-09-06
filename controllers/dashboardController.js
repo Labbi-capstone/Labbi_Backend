@@ -24,12 +24,14 @@ export const createDashboard = async (req, res) => {
 // Retrieve dashboards based on user roles
 export const getDashboards = async (req, res) => {
   try {
-    const dashboards = await DashboardService.getDashboardsForUser(req.user);
+    const dashboards = await DashboardService.getAllDashboards(); // A new method in the service
     res.status(200).json(dashboards);
   } catch (error) {
+    console.error("Error fetching dashboards:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Retrieve dashboards based on orgID 
 export const getDashboardsByOrg = async (req, res) => {
