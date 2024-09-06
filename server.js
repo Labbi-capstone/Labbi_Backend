@@ -18,12 +18,12 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
-  let interval = null; // Initialize interval variable
+  let interval = null;
 
   ws.on("message", async (message) => {
-    const { prometheusEndpointId, chartType } = JSON.parse(message);
+    const { prometheusEndpointId, chartType, chartId } = JSON.parse(message); // Add chartId in the message
     console.log(
-      `Processing for Endpoint ID: ${prometheusEndpointId}, Chart Type: ${chartType}`
+      `Processing for Chart ID: ${chartId}, Endpoint ID: ${prometheusEndpointId}, Chart Type: ${chartType}`
     );
 
     const endpoint = await PrometheusEndpoint.findById(prometheusEndpointId);
@@ -43,18 +43,22 @@ wss.on("connection", (ws) => {
           },
         });
         if (response.data) {
-          ws.send(JSON.stringify({ chartType, data: response.data }));
+          ws.send(
+            JSON.stringify({
+              chartId, // Include the chartId in the response
+              chartType,
+              data: response.data,
+            })
+          );
           console.log("Data sent to client");
         }
       } catch (error) {
         ws.send(
           JSON.stringify({ error: `Error fetching data: ${error.message}` })
-        
         );
       }
     };
 
-    // Clear existing interval before setting a new one to prevent duplicates
     if (interval) {
       clearInterval(interval);
     }
@@ -67,7 +71,7 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
       console.log("Client disconnected");
-      clearInterval(interval); // Clean up when the client disconnects
+      clearInterval(interval);
     });
   });
 });

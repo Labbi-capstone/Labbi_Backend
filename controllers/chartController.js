@@ -1,34 +1,12 @@
 import { Chart } from "../models/chartModel.js";
 import PrometheusEndpoint from "../models/prometheusEndpointModel.js";
 import Dashboard from "../models/dashboardModel.js";
+import * as chartService from "../services/chartServices.js";
 
 export const createChart = async (req, res) => {
   try {
-    const {
-      name,
-      chart_type,
-      prometheus_endpoint_id,
-      created_by,
-      dashboard_id,
-    } = req.body;
-
-    // Validate PrometheusEndpoint existence
-    const endpoint = await PrometheusEndpoint.findById(prometheus_endpoint_id);
-    if (!endpoint) {
-      return res.status(404).json({ error: "PrometheusEndpoint not found" });
-    }
-
-    // Create new chart
-    const newChart = new Chart({
-      name,
-      chart_type,
-      prometheus_endpoint_id,
-      created_by,
-      dashboard_id,
-    });
-
-    await newChart.save();
-
+    const chartData = req.body;
+    const newChart = await chartService.createChart(chartData);
     return res.status(201).json(newChart);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -38,9 +16,7 @@ export const createChart = async (req, res) => {
 export const getChartById = async (req, res) => {
   try {
     const { id } = req.params;
-    const chart = await Chart.findById(id)
-      .populate("prometheus_endpoint_id")
-      .populate("dashboard_id");
+    const chart = await chartService.getChartById(id);
 
     if (!chart) {
       return res.status(404).json({ error: "Chart not found" });
@@ -54,8 +30,7 @@ export const getChartById = async (req, res) => {
 
 export const getAllCharts = async (req, res) => {
   try {
-    const charts = await Chart.find()
-
+    const charts = await chartService.getAllCharts();
     return res.status(200).json(charts);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -65,29 +40,8 @@ export const getAllCharts = async (req, res) => {
 export const updateChart = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, chart_type, prometheus_endpoint_id, is_active } = req.body;
-
-    // Validate PrometheusEndpoint existence if being updated
-    if (prometheus_endpoint_id) {
-      const endpoint = await PrometheusEndpoint.findById(
-        prometheus_endpoint_id
-      );
-      if (!endpoint) {
-        return res.status(404).json({ error: "PrometheusEndpoint not found" });
-      }
-    }
-
-    const updatedChart = await Chart.findByIdAndUpdate(
-      id,
-      {
-        name,
-        chart_type,
-        prometheus_endpoint_id,
-        is_active,
-        updated_at: Date.now(),
-      },
-      { new: true }
-    );
+    const chartData = req.body;
+    const updatedChart = await chartService.updateChart(id, chartData);
 
     if (!updatedChart) {
       return res.status(404).json({ error: "Chart not found" });
@@ -102,8 +56,7 @@ export const updateChart = async (req, res) => {
 export const deleteChart = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const deletedChart = await Chart.findByIdAndDelete(id);
+    const deletedChart = await chartService.deleteChart(id);
 
     if (!deletedChart) {
       return res.status(404).json({ error: "Chart not found" });
@@ -118,10 +71,7 @@ export const deleteChart = async (req, res) => {
 export const getChartsByDashboardId = async (req, res) => {
   try {
     const { dashboardId } = req.params;
-
-    const charts = await Chart.find({ dashboard_id: dashboardId })
-      .populate("prometheus_endpoint_id")
-      .populate("dashboard_id");
+    const charts = await chartService.getChartsByDashboardId(dashboardId);
 
     return res.status(200).json(charts);
   } catch (error) {
@@ -132,18 +82,7 @@ export const getChartsByDashboardId = async (req, res) => {
 export const getChartsByOrganizationId = async (req, res) => {
   try {
     const { organizationId } = req.params;
-
-    // Fetch dashboards by organization ID
-    const dashboards = await Dashboard.find({
-      organization_id: organizationId,
-    });
-    const dashboardIds = dashboards.map((dashboard) => dashboard._id);
-
-    const charts = await Chart.find({
-      dashboard_id: { $in: dashboardIds },
-    })
-      .populate("prometheus_endpoint_id")
-      .populate("dashboard_id");
+    const charts = await chartService.getChartsByOrganizationId(organizationId);
 
     return res.status(200).json(charts);
   } catch (error) {

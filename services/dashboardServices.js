@@ -21,6 +21,9 @@ class DashboardService {
       });
     }
   }
+  static async getAllDashboards() {
+    return await Dashboard.find({}); // This retrieves all dashboards from the database
+  }
 
   static async getDashboardsByOrg(orgId) {
     return await Dashboard.find({ organization_id: orgId });
