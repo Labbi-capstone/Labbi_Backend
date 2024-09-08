@@ -33,6 +33,28 @@ export const listOrganizations = async (req, res) => {
   }
 };
 
+export const listOrgByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find organizations where the user is either an admin or a member
+    const organizations = await Organization.find({
+      $or: [{ orgAdmins: userId }, { members: userId }],
+    });
+
+    // Return organizations if found
+    if (organizations.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No organizations found for this user." });
+    }
+
+    res.status(200).json(organizations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Controller to list users (admins and members) within an organization
 export const listOrganizationUsers = async (req, res) => {
   try {

@@ -109,6 +109,50 @@ export const updateUser = async (req, res) => {
   }
 };
 
+export const updateUserInfo = async (req, res) => {
+  try {
+    const { fullName, email, role } = req.body; // Only updating name, email, and role
+    const updateData = {};
+
+    if (fullName) updateData.fullName = fullName;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role; // Add role to updateData if provided
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    res.json({ msg: "User info updated successfully", updatedUser });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};
+
+export const updateUserPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const updateData = {};
+
+    if (password) {
+      // Hash the new password before saving
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    res.json({ msg: "Password updated successfully", updatedUser });
+  } catch (err) {
+    return res.status(500).json({ msg: err.message });
+  }
+};
+
 // TODO: Deletes a user account.
 export const deleteUser = async (req, res) => {
   // Logic to delete a user
@@ -143,7 +187,7 @@ async function resetPassword(req, res) {
 
 // TODO: refresh token
 export const refreshToken = async (req, res) => {
-  try {
+  try { 
     const rf_token = req.cookies.refreshtoken;
     console.log(rf_token);
     if (!rf_token)
