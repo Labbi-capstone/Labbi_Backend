@@ -16,7 +16,7 @@ const router = express.Router();
 // Route to create an organization (only accessible by admin)
 router.post("/create", authenticateUser, isAdmin, createOrganization);
 // Route to list all organizations (accessible by admin only)
-router.get("/list", authenticateUser, isAdmin, listOrganizations);
+router.get("/list", authenticateUser, listOrganizations);
 
 router.get("/user/:userId/orgs", authenticateUser, listOrgByUserId);
 
