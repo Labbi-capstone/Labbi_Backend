@@ -28,4 +28,6 @@ router.delete("/:id", deleteEndpointById);
 // Route to construct the full URL for a Prometheus endpoint by ID
 router.get("/construct-url/:id", constructPrometheusUrl);
 
+
 export default router;
+ 

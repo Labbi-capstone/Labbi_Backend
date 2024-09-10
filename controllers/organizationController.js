@@ -33,6 +33,28 @@ export const listOrganizations = async (req, res) => {
   }
 };
 
+export const listOrgByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find organizations where the user is either an admin or a member
+    const organizations = await Organization.find({
+      $or: [{ orgAdmins: userId }, { members: userId }],
+    });
+
+    // Return organizations if found
+    if (organizations.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No organizations found for this user." });
+    }
+
+    res.status(200).json(organizations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Controller to list users (admins and members) within an organization
 export const listOrganizationUsers = async (req, res) => {
   try {
@@ -165,6 +187,44 @@ export const addOrgMember = async (req, res) => {
 
     await org.save();
     res.status(200).json(org);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// Controller to remove a user (admin or member) from an organization
+export const removeUserFromOrg = async (req, res) => {
+  try {
+    const { orgId, userId } = req.params;
+
+    // Find the organization by ID
+    const org = await Organization.findById(orgId);
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found." });
+    }
+
+    // Check if the user is an orgAdmin or a member
+    const isOrgAdmin = org.orgAdmins.includes(userId);
+    const isMember = org.members.includes(userId);
+
+    if (!isOrgAdmin && !isMember) {
+      return res
+        .status(404)
+        .json({ message: "User is not part of the organization." });
+    }
+
+    // Remove the user from the respective array
+    if (isOrgAdmin) {
+      org.orgAdmins = org.orgAdmins.filter((adminId) => adminId.toString() !== userId);
+    }
+
+    if (isMember) {
+      org.members = org.members.filter((memberId) => memberId.toString() !== userId);
+    }
+
+    // Save the updated organization
+    await org.save();
+
+    res.status(200).json({ message: "User removed from organization successfully." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

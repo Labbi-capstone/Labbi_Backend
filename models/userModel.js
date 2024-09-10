@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: false, // Role is required
-    enum: ["user", "developer", "admin", "adminOrg"], // Enum to restrict role to specific values
+    enum: ["user", "developer", "admin"], // Enum to restrict role to specific values
     default: "user", // Default role if not specified
   },
   dashboardUids: [
@@ -47,15 +47,11 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password); // Returns true if passwords match
 };
 
-// Define a schema for AdminOrg which extends userSchema with an additional field for organizations
-const AdminOrgSchema = new mongoose.Schema({
-  ...userSchema.obj, // Spread operator to inherit properties from userSchema
-  orgs: [String], // List of organizations the adminOrg owns
-});
+
 
 // Create models from the schemas
 const User = mongoose.model("User", userSchema);
-const AdminOrg = mongoose.model("AdminOrg", AdminOrgSchema);
+
 
 // Export the models
-export { User, AdminOrg };
+export { User};

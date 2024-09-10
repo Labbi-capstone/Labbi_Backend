@@ -6,12 +6,16 @@ import * as chartService from "../services/chartServices.js";
 export const createChart = async (req, res) => {
   try {
     const chartData = req.body;
+    console.log("Incoming Chart Data:", chartData); // Log the incoming data
     const newChart = await chartService.createChart(chartData);
+    console.log("Created Chart:", newChart); // Log the created chart
     return res.status(201).json(newChart);
   } catch (error) {
+    console.error("Chart creation failed:", error.message); // Log the error
     return res.status(500).json({ error: error.message });
   }
 };
+
 
 export const getChartById = async (req, res) => {
   try {
@@ -52,6 +56,7 @@ export const updateChart = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
 
 export const deleteChart = async (req, res) => {
   try {

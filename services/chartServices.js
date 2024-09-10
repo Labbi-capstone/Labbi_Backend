@@ -24,6 +24,7 @@ export const createChart = async (chartData) => {
   return await newChart.save();
 };
 
+
 // Get a chart by ID
 export const getChartById = async (id) => {
   const chart = await Chart.findById(id)
@@ -39,7 +40,8 @@ export const getAllCharts = async () => {
 
 // Update a chart
 export const updateChart = async (id, chartData) => {
-  const { name, chart_type, prometheus_endpoint_id, is_active } = chartData;
+  const { name, chart_type, prometheus_endpoint_id, is_active, dashboard_id } =
+    chartData;
 
   // Validate PrometheusEndpoint existence if being updated
   if (prometheus_endpoint_id) {
@@ -56,6 +58,7 @@ export const updateChart = async (id, chartData) => {
       chart_type,
       prometheus_endpoint_id,
       is_active,
+      dashboard_id, // Make sure dashboard_id is included here
       updated_at: Date.now(),
     },
     { new: true }
@@ -63,6 +66,7 @@ export const updateChart = async (id, chartData) => {
 
   return updatedChart;
 };
+
 
 // Delete a chart
 export const deleteChart = async (id) => {
