@@ -46,12 +46,6 @@ export const getDashboardsByOrg = async (req, res) => {
 // Only Admins can update a dashboard
 export const updateDashboard = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Access denied. Only admins can update dashboards." });
-    }
-
     const dashboard = await DashboardService.updateDashboard(
       req.params.id,
       req.body

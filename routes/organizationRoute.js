@@ -7,6 +7,7 @@ import {
   addOrgAdmin,
   addOrgMember,
   listOrgByUserId,
+  removeUserFromOrg,
 } from "../controllers/organizationController.js";
 import { authenticateUser, isAdmin } from "../middlewares/authenticate.js";
 
@@ -35,6 +36,7 @@ router.post("/:orgId/addOrgAdmin", authenticateUser, isAdmin, addOrgAdmin);
 
 router.post("/:orgId/addOrgMember", authenticateUser, isAdmin, addOrgMember);
 
-
+// Route to remove a user from an organization (only accessible by admin)
+router.delete("/:orgId/removeUser/:userId", removeUserFromOrg);
 
 export default router;
