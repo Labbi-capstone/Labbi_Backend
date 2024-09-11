@@ -23,7 +23,7 @@ wss.on("connection", (ws) => {
 
   let interval = null;
 
-  ws.on("message", async (message) => {
+  ws.on("message", async (message) => { 
     const { prometheusEndpointId, chartType, chartId } = JSON.parse(message);
 
     console.log(
@@ -67,8 +67,8 @@ wss.on("connection", (ws) => {
       clearInterval(interval); // Clear the old interval if it exists
     }
 
-    fetchPrometheusData();
-    interval = setInterval(fetchPrometheusData, 10000);
+    // fetchPrometheusData();
+    interval = setInterval(fetchPrometheusData, 5000);
 
     ws.on("close", () => {
       console.log("Client disconnected");
